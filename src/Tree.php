@@ -22,28 +22,95 @@ class Tree
         'title',
         'br'
     );
-    /** Source html tree */
-    public $html = '';
-    /** @var \DOMNode Pointer to current dom element */
-    protected $dom;
-    protected $path;
 
     /**
-     * Create less node tree from file
+     * Build destination code tree from source code.
      *
-     * @param string $path Path to file for analyzing
-     *
-     * @throws \Exception If file path does not exists
+     * @param string $source Source code
      */
-    public function __construct($path)
+    public function build($source)
     {
-        // If file exists
-        if (file_exists($path)) {
-            // Read it
-            $this->html = trim(file_get_contents($path));
-        } else {
-            throw new \Exception('Cannot read view file [' . $path . ']');
+        // Prepare source code
+        $source = $this->prepare($source);
+
+        // Build destination node tree
+        $tree = $this->analyze($source);
+
+
+    }
+
+    /**
+     * Source code cleaner.
+     *
+     * @param string $source
+     *
+     * @return string Cleared source code
+     */
+    protected function prepare($source)
+    {
+        // Remove all PHP code from view
+        return trim(preg_replace('/<\?(php|=).*?\?>/', '', $source));
+    }
+
+    /**
+     * Analyze source code and create destination code tree.
+     *
+     * @param string $source Source code
+     *
+     * @return HTMLDOMNode Internal code tree
+     */
+    protected function &analyze($source)
+    {
+        libxml_use_internal_errors(true);
+
+        /** @var \DOMNode Pointer to current dom element */
+        $dom = new \DOMDocument();
+        $dom->loadHTML($source);
+
+        // Perform recursive node analysis
+        return $this->analyzeSourceNode($dom, new HTMLDOMNode(new \DOMNode()));
+    }
+
+    /**
+     * Perform source node analysis.
+     *
+     * @param \DOMNode    $domNode
+     * @param HTMLDOMNode $parent
+     *
+     * @return HTMLDOMNode
+     */
+    protected function &analyzeSourceNode(\DOMNode $domNode, HTMLDOMNode $parent)
+    {
+        /** @var \DOMNode[] $children */
+        $children = [];
+        /** @var array $tags tag name => count collection */
+        $tags = [];
+
+        // Work only with DOMElements
+        foreach ($domNode->childNodes as $child) {
+            if ($child->nodeType === 1) {
+                $children[] = $child;
+
+                // Get child node tag and count them
+                $tag = $child->nodeName;
+                if (!array_key_exists($tag, $tags)) {
+                    $tags[$tag] = 1;
+                } else {
+                    $tags[$tag]++;
+                }
+            }
         }
+
+        // Iterate all normal DOM nodes
+        foreach ($children as $child) {
+            // Create internal node instance
+            $node = new HTMLDOMNode($child, $parent);
+
+            // Go deeper in recursion
+            $this->analyzeSourceNode($child, $node);
+        }
+
+        return $parent;
     }
 
     /**
@@ -82,7 +149,7 @@ class Tree
      *
      * @internal param \samsonos\php\skeleton\Node $parent Pointer to parent LESS Node
      */
-    protected function handleNode(\DOMNode & $node, & $path = array())
+    protected function handleNode(\DOMNode & $node, &$path = array())
     {
         // Collect normal HTML DOM nodes
         /** @var \DOMNode[] $children */
@@ -104,7 +171,7 @@ class Tree
         // Iterate all normal DOM nodes
         foreach ($children as $child) {
             // Create LESS node
-            $childNode = new Node($child);
+            $childNode = new HTMLDOMNode($child);
             // If this LESS node has NO CSS classes
             if (sizeof($childNode->class) == 0) {
                 // Create new multidimensional array key group

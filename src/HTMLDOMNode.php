@@ -6,38 +6,38 @@
 namespace samsonframework\html2less;
 
 /**
+ * Internal HTML DOM node tree.
  *
  * @author    Vitaly Egorov <egorov@samsonos.com>
- * @copyright 2013 SamsonOS
- * @version
+ * @copyright 2016 SamsonOS
  */
-class Node
+class HTMLDOMNode
 {
     /** @var string HTML tag name */
     public $tag;
+    /** @var string HTML identifier */
+    public $identifier;
     /** @var string[] CSS class names collection */
     public $class = array();
-    /** @var string HTML identifier */
-    public $id;
     /** @var string HTML name attribute value */
     public $name;
-    /** @var  string LESS selector for node */
+    /** @var string Selector for node */
     public $selector;
     /** @var \DOMNode pointer to DOM node */
     public $dom;
-    /** @var Node pointer to parent node */
+    /** @var $this Pointer to parent node */
     public $parent;
-    /** @var Node[] Collection of nested nodes */
+    /** @var $this [] Collection of nested nodes */
     public $children = array();
 
     /**
      * Create LESS Node
      *
      * @param \DOMNode $node     Pointer to DOM node
-     * @param Node     $parent   Pointer to parent LESS Node
+     * @param          $this     $parent   Pointer to parent node
      * @param string   $selector Forced LESS node selector
      */
-    public function __construct(\DOMNode & $node, Node & $parent = null, $selector = null)
+    public function __construct(\DOMNode &$node, self &$parent = null, $selector = null)
     {
         // Store pointer to DOM node
         $this->dom = &$node;
@@ -45,26 +45,30 @@ class Node
         $this->tag = $node->nodeName;
         // Pointer to parent LESS Node
         $this->parent = &$parent;
+
         // Fill all available node parameters
-        if (isset($node->attributes)) {
-            /**@var $attribute \DOMNode */
+        if (null !== $node->attributes) {
+            /**@var \DOMNode $attribute */
             foreach ($node->attributes as $attribute) {
                 $value = trim($attribute->nodeValue);
-                if ($attribute->name == 'class' && strlen($value)) {
-                    $this->class = explode(' ', $value);
-                } else if ($attribute->name == 'id' && strlen($value)) {
-                    $this->id = $value;
-                } else if ($attribute->name == 'name' && strlen($value)) {
-                    $this->name = $value;
+                if ($value !== '') {
+                    if ($attribute->name === 'class') {
+                        $this->class = explode(' ', $value);
+                    } elseif ($attribute->name === 'identifier') {
+                        $this->identifier = $value;
+                    } elseif ($attribute->name === 'name') {
+                        $this->name = $value;
+                    }
                 }
             }
         }
+
         $this->selector = $selector;
-        if (!isset($selector)) {
+        if (null !== $selector) {
             // Choose default LESS selector for node
             $this->selector = $this->tag;
             // If we have class attribute
-            if (sizeof($this->class)) {
+            if (count($this->class)) {
                 // Use the first class by default
                 $this->selector = '.' . $this->class[0];
             }

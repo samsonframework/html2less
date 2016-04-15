@@ -1,0 +1,34 @@
+{
+  "name": "samsonframework/html2less",
+  "description": "SamsonFramework LESS tree generator from HTML tree package",
+  "keywords": [
+    "less",
+    "html",
+    "generation",
+    "less tree"
+  ],
+  "authors": [
+    {
+      "name": "Vitaly Iegorov",
+      "email": "egorov@samsonos.com"
+    }
+  ],
+  "require": {
+    "samsonframework/base": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "4.*"
+  },
+  "minimum-stability": "dev",
+  "license": "Open Software License (OSL) v 3.0",
+  "homepage": "http://samsonos.com/",
+  "autoload": {
+    "classmap": ["src/"],
+    "psr-4": {
+      "samsonframework\\html2less\\": "src/"
+    }
+  },
+  "config":{
+    "github-protocols":["https"]
+  }
+}

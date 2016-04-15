@@ -36,7 +36,7 @@ class Tree
         // Build destination node tree
         $tree = $this->analyze($source);
 
-
+        trace($tree);
     }
 
     /**
@@ -111,34 +111,6 @@ class Tree
         }
 
         return $parent;
-    }
-
-    /**
-     * Generate LESS code from current LESS Node tree
-     *
-     * @param string $html HTML code to parse
-     *
-     * @return string Generated LESS code from tree
-     */
-    public function toLESS($html = null)
-    {
-        $output = '';
-        // If HTML is not empty
-        if (isset($this->html{0})) {
-            // Remove all PHP code from view
-            $this->html = preg_replace('/<\?php.*?\?>/', '', $this->html);
-            // Parse HTML
-            $this->dom = new \DOMDocument();
-            libxml_use_internal_errors(true);
-            $this->dom->loadHTML($this->html);
-            // Generate LESS Node tree
-            $this->handleNode($this->dom, $this->path);
-            // Generate recursively LESS code
-            $this->_toLESS($this->path, $output);
-        } else {
-            $output = 'Nothing to convert =(';
-        }
-        return $output;
     }
 
     /**
@@ -225,47 +197,4 @@ class Tree
             }
         }
     }
-
-    /**
-     * Inner recursive output LESS generator
-     *
-     * @param array  $node   Current LESS path array pointer
-     * @param string $output Current LESS text output
-     * @param int    $level  Current LESS nesting level
-     */
-    protected function _toLESS(array $node, & $output = '', $level = 0)
-    {
-        // Iterate all LESS path node array
-        foreach ($node as $key => $child) {
-            // Flag for rendering current LESS path node
-            $render = !in_array($key, self::$ignoredNodes);
-            // If this path key is not ignored
-            if ($render) {
-                $output .= "\n" . $this->spacer($level) . $key . ' {';
-            }
-            // Go deeper in recursion
-            $this->_toLESS($child, $output, $render ? $level + 1 : $level);
-            // If this path key is not ignored
-            if ($render) {
-                $output .= "\n" . $this->spacer($level) . '}';
-            }
-        }
-    }
-
-    /**
-     * Generate spaces for specific code level
-     *
-     * @param integer $level Current code nesting level
-     *
-     * @return string Spaces string
-     */
-    protected function spacer($level)
-    {
-        $result = '';
-        for ($i = 0; $i < $level; $i++) {
-            $result .= '  ';
-        }
-        return $result;
-    }
-
 }

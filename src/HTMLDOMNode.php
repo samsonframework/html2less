@@ -46,6 +46,11 @@ class HTMLDOMNode
         // Pointer to parent LESS Node
         $this->parent = &$parent;
 
+        // Add this node to parent
+        if (null !== $parent) {
+            $parent->children[] = $this;
+        }
+
         // Fill all available node parameters
         if (null !== $node->attributes) {
             /**@var \DOMNode $attribute */
@@ -63,8 +68,7 @@ class HTMLDOMNode
             }
         }
 
-        $this->selector = $selector;
-        if (null !== $selector) {
+        if (null === $selector) {
             // Choose default LESS selector for node
             $this->selector = $this->tag;
             // If we have class attribute

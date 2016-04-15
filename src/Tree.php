@@ -10,17 +10,11 @@ class Tree
     /** @var array Collection of ignored DOM nodes */
     public static $ignoredNodes = array(
         'head',
-        'html',
-        '.clear',
-        '&.clear',
-        '.clearfix',
-        '&.clearfix',
-        'body',
         'meta',
         'script',
         'link',
         'title',
-        'br'
+        'br',
     );
 
     public function __construct()
@@ -526,7 +520,7 @@ class Tree
 
 </body></html>
 HTML;
-        $this->build($example);
+        trace($this->build($example), 1);
     }
 
     /**
@@ -542,7 +536,7 @@ HTML;
         // Build destination node tree
         $tree = $this->analyze($source);
 
-        trace($tree);
+        return $this->output($tree, $output);
     }
 
     /**
@@ -592,13 +586,14 @@ HTML;
         /** @var array $tags tag name => count collection */
         $tags = [];
 
-        // Work only with DOMElements
         foreach ($domNode->childNodes as $child) {
-            if ($child->nodeType === 1) {
+            $tag = $child->nodeName;
+
+            // Work only with allowed DOMElements
+            if ($child->nodeType === 1 && !in_array($tag, static::$ignoredNodes)) {
                 $children[] = $child;
 
                 // Get child node tag and count them
-                $tag = $child->nodeName;
                 if (!array_key_exists($tag, $tags)) {
                     $tags[$tag] = 1;
                 } else {
@@ -617,6 +612,25 @@ HTML;
         }
 
         return $parent;
+    }
+
+    /**
+     * @param HTMLDOMNode $node
+     * @param string      $output
+     * @param int         $level
+     *
+     * @return string
+     */
+    public function output(HTMLDOMNode $node, &$output = '', $level = 0)
+    {
+        // Generate tabs array
+        $output .= implode('', array_fill(0, $level, ' ')) . $node->selector . "\n";
+
+        foreach ($node->children as $child) {
+            $this->output($child, $output, $level + 1);
+        }
+
+        return $output;
     }
 
     /**

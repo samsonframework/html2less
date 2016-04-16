@@ -164,7 +164,9 @@ class Tree
         <div class="header-text">Our team</div>
         <div class="all-people">
     <div class="one">
-    <a class="photo" href="http://prayforukraine.dev/team/yaroslav-kandyba/" style="background-image: url('/upload/bb3a1d725df000114e85470a2253cddb.png')"></a>
+    <a class="photo" href="http://prayforukraine.dev/team/yaroslav-kandyba/" style="background-image: url('/upload/bb3a1d725df000114e85470a2253cddb.png')">
+    <span>sdfds</span>
+</a>
     <a class="social" href="https://www.facebook.com/profile.php?id=100011337422732&amp;fref=ts"></a>
     <div class="description">
         <div class="name">
@@ -245,7 +247,9 @@ class Tree
             Pray for Ukraine collects donations to provide necessary items such as military equipment and medicines. Military special forces in the Eastern region of Ukraine continue to carry out its primary duty - to protect especially important sites covering the state border and protect the civilian population.         </div>
     </div>
     </div><div onclick="location.href='http://prayforukraine.dev/projects/firstaidkit/'" class="one-project swiper-slide" style="width: 235px;">
-    <div class="photo" style="background-image: url('/upload/5472d2827386fb3a3d834708209390a6.jpeg')"></div>
+    <div class="photo" style="background-image: url('/upload/5472d2827386fb3a3d834708209390a6.jpeg')">
+    <i class="cur"></i>
+</div>
     <div class="description">
         <div class="title">
             Individual First Aid Kit        </div>
@@ -261,7 +265,9 @@ class Tree
             Shelter Chervonoarmiysk is for 30 children who lost their parents because of the war. A few miles from their destroyed homes        </div>
     </div>
     </div><div onclick="location.href='http://prayforukraine.dev/projects/help-disabled-children-veronika/'" class="one-project swiper-slide" style="width: 235px;">
-    <div class="photo" style="background-image: url('/upload/337a7990213c708c97216461ecfa443a.png')"></div>
+    <div class="photo" style="background-image: url('/upload/337a7990213c708c97216461ecfa443a.png')">
+    <span>dsdfsd</span>
+</div>
     <div class="description">
         <div class="title">
             Help Veronika to live, 3 years, bone marrow cancer        </div>
@@ -558,7 +564,7 @@ HTML;
      *
      * @param string $source Source code
      *
-     * @return HTMLDOMNode Internal code tree
+     * @return LessNode Internal code tree
      */
     protected function &analyze($source)
     {
@@ -569,60 +575,92 @@ HTML;
         $dom->loadHTML($source);
 
         // Perform recursive node analysis
-        return $this->analyzeSourceNode($dom, new HTMLDOMNode(new \DOMNode()));
+        return $this->analyzeSourceNode($dom, new LessNode(''));
     }
 
     /**
      * Perform source node analysis.
      *
-     * @param \DOMNode    $domNode
-     * @param HTMLDOMNode $parent
+     * @param \DOMNode $domNode
+     * @param LessNode $parent
      *
-     * @return HTMLDOMNode
+     * @return LessNode
      */
-    protected function &analyzeSourceNode(\DOMNode $domNode, HTMLDOMNode $parent)
+    protected function &analyzeSourceNode(\DOMNode $domNode, LessNode $parent)
     {
-        /** @var \DOMNode[] $children */
-        $children = [];
-        /** @var array $tags tag name => count collection */
-        $tags = [];
-
         foreach ($domNode->childNodes as $child) {
             $tag = $child->nodeName;
 
             // Work only with allowed DOMElements
             if ($child->nodeType === 1 && !in_array($tag, static::$ignoredNodes)) {
-                $children[] = $child;
+                // Get node classes
+                $classes = array_filter(explode(' ', $this->getDOMAttributeValue($child, 'class')));
 
-                // Get child node tag and count them
-                if (!array_key_exists($tag, $tags)) {
-                    $tags[$tag] = 1;
-                } else {
-                    $tags[$tag]++;
+                // Define less node selector
+                $selector = $tag;
+                if (($identifier = $this->getDOMAttributeValue($child, 'id')) !== null) {
+                    $selector = '#' . $identifier;
+                } elseif (count($classes)) {
+                    $selector = '.' . array_shift($classes);
+                } elseif (($name = $this->getDOMAttributeValue($child, 'name')) !== null) {
+                    $selector = $tag . '[name=' . $name . ']';
                 }
+
+                // Find child node by selector
+                $node = $parent->getChild($selector);
+
+                // Check if we have created this selector LessNode for this branch
+                if (null === $node) {
+                    // Create internal node instance
+                    $node = new LessNode($selector, $parent);
+                }
+
+                // Create inner class modifiers for parent node
+                foreach ($classes as $class) {
+                    new LessNode('&.' . $class, $node);
+                }
+
+                // Go deeper in recursion
+                $this->analyzeSourceNode($child, $node);
             }
-        }
-
-        // Iterate all normal DOM nodes
-        foreach ($children as $child) {
-            // Create internal node instance
-            $node = new HTMLDOMNode($child, $parent);
-
-            // Go deeper in recursion
-            $this->analyzeSourceNode($child, $node);
         }
 
         return $parent;
     }
 
     /**
-     * @param HTMLDOMNode $node
-     * @param string      $output
-     * @param int         $level
+     * Get DOM node attribute value.
+     *
+     * @param \DOMNode $domNode
+     * @param string   $attributeName
+     *
+     * @return null|string DOM node attribute value
+     */
+    protected function getDOMAttributeValue(\DOMNode $domNode, $attributeName)
+    {
+        if (null !== $domNode->attributes) {
+            /**@var \DOMNode $attribute */
+            foreach ($domNode->attributes as $attribute) {
+                $value = trim($attribute->nodeValue);
+                // If DOM attribute matches needed
+                if ($attributeName === $attribute->name && $value !== '') {
+                    // Remove white spaces
+                    return $value;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param LessNode $node
+     * @param string   $output
+     * @param int      $level
      *
      * @return string
      */
-    public function output(HTMLDOMNode $node, &$output = '', $level = 0)
+    public function output(LessNode $node, &$output = '', $level = 0)
     {
         // Generate tabs array
         $output .= implode('', array_fill(0, $level, '  ')) . $node . "\n";
@@ -632,90 +670,5 @@ HTML;
         }
 
         return $output;
-    }
-
-    /**
-     * Handle current DOM node and transform it to LESS node
-     *
-     * @param \DOMNode $node Pointer to current analyzed DOM node
-     * @param array    $path
-     *
-     * @internal param \samsonos\php\skeleton\Node $parent Pointer to parent LESS Node
-     */
-    protected function handleNode(\DOMNode & $node, &$path = array())
-    {
-        // Collect normal HTML DOM nodes
-        /** @var \DOMNode[] $children */
-        $children = array();
-        foreach ($node->childNodes as $child) {
-            // Work only with DOMElements
-            if ($child->nodeType == 1) {
-                $children[] = $child;
-            }
-        }
-        // Group current level HTML DOM nodes by tag name and count them
-        $childrenTagArray = array();
-        foreach ($children as $child) {
-            $tag = $child->nodeName;
-            if (!isset($childrenTagArray[$tag])) {
-                $childrenTagArray[$tag] = 1;
-            } else $childrenTagArray[$tag]++;
-        }
-        // Iterate all normal DOM nodes
-        foreach ($children as $child) {
-            // Create LESS node
-            $childNode = new HTMLDOMNode($child);
-            // If this LESS node has NO CSS classes
-            if (sizeof($childNode->class) == 0) {
-                // Create new multidimensional array key group
-                if (!isset($path[$child->nodeName])) {
-                    $path[$child->nodeName] = array();
-                }
-                // Go deeper in recursion with current child node and new path
-                $this->handleNode($child, $path[$child->nodeName]);
-            } else { // This child DOM node has CSS classes
-                // Get first node class and remove it from array og classes
-                $firstClass = array_shift($childNode->class);
-                // Save current LESS path
-                $oldPath = &$path;
-                // If there is more than one DOM child node with this tag name at this level
-                if ($childrenTagArray[$childNode->tag] > 1 && $childNode->tag != 'div') {
-                    // Create correct LESS class name
-                    $class = '&.' . $firstClass;
-                    // Create new multidimensional array key group with tag name group
-                    if (!isset($path[$child->nodeName][$class])) {
-                        $path[$child->nodeName][$class] = array();
-                    }
-                    // Go deeper in recursion with current child node and new path with tag name group and CSS class name group
-                    $this->handleNode($child, $path[$child->nodeName][$class]);
-                    // Make new path as current
-                    $path = &$path[$child->nodeName][$class];
-                } else { // There is only on child with this tag name at this level
-                    // Create correct LESS class name
-                    $class = '.' . $firstClass;
-                    // Create new multidimensional array key group without tag name group
-                    if (!isset($path[$class])) {
-                        $path[$class] = array();
-                    }
-                    // Go deeper in recursion with current child node and new path with CSS class name group
-                    $this->handleNode($child, $path[$class]);
-                    // Make new path as current
-                    $path = &$path[$class];
-                }
-                // Iterate all other classes starting from second class
-                foreach ($childNode->class as $class) {
-                    // Create correct LESS class name
-                    $class = '&.' . $class;
-                    // Create new multidimensional array key group with tag name group
-                    if (!isset($path[$class])) {
-                        $path[$class] = array();
-                    }
-                    // Go deeper in recursion with current child node and new path with tag name group and CSS class name group
-                    $this->handleNode($child, $path[$class]);
-                }
-                // Return old LESS path tree
-                $path = &$oldPath;
-            }
-        }
     }
 }

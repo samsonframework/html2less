@@ -12,6 +12,7 @@ class Tree
         'head',
         'meta',
         'script',
+        'noscript',
         'link',
         'title',
         'br',
@@ -624,7 +625,7 @@ HTML;
     public function output(HTMLDOMNode $node, &$output = '', $level = 0)
     {
         // Generate tabs array
-        $output .= implode('', array_fill(0, $level, ' ')) . $node->selector . "\n";
+        $output .= implode('', array_fill(0, $level, '  ')) . $node . "\n";
 
         foreach ($node->children as $child) {
             $this->output($child, $output, $level + 1);

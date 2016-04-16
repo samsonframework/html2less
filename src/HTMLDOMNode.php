@@ -75,6 +75,8 @@ class HTMLDOMNode
             if (count($this->class)) {
                 // Use the first class by default
                 $this->selector = '.' . $this->class[0];
+            } elseif (strlen($this->identifier)) {
+                $this->selector .= '#' . $this->identifier;
             }
         }
     }
@@ -84,6 +86,10 @@ class HTMLDOMNode
      */
     public function __toString()
     {
-        return $this->tag . '[' . $this->selector . ']';
+        $text = $this->tag;
+        $text .= strlen($this->identifier) ? '#' . $this->identifier : '';
+        $text .= count($this->class) ? '[.' . implode('.', $this->class) . ']' : '';
+
+        return $text . ' - ' . $this->selector;
     }
 }

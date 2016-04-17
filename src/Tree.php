@@ -80,7 +80,7 @@ class Tree
             $tag = $child->nodeName;
 
             // Work only with allowed DOMElements
-            if ($child->nodeType === 1 && !in_array($tag, static::$ignoredNodes)) {
+            if ($child->nodeType === 1 && !in_array($tag, static::$ignoredNodes, true)) {
                 // Get node classes
                 $classes = array_filter(explode(' ', $this->getDOMAttributeValue($child, 'class')));
 
@@ -127,7 +127,7 @@ class Tree
     protected function getDOMAttributeValue(\DOMNode $domNode, $attributeName)
     {
         if (null !== $domNode->attributes) {
-            /**@var \DOMNode $attribute */
+            /**@var \DOMAttr $attribute */
             foreach ($domNode->attributes as $attribute) {
                 $value = trim($attribute->nodeValue);
                 // If DOM attribute matches needed
@@ -142,16 +142,18 @@ class Tree
     }
 
     /**
-     * @param Node   $node
-     * @param string $output
-     * @param int    $level
+     * Render LESS tree. This function is recursive.
      *
-     * @return string
+     * @param Node   $node   Current LESS tree node
+     * @param string $output Final LESS code string
+     * @param int    $level  Current recursion level
+     *
+     * @return string LESS code
      */
     public function output(Node $node, &$output = '', $level = 0)
     {
         // Define if this is not empty node and this is not generic nodes
-        $hasSelector = isset($node->selector{0}) && !in_array($node->selector, array('html', 'body'));
+        $hasSelector = $node->selector !== '' && !in_array($node->selector, array('html', 'body'), true);
 
         // Output less node with spaces
         if ($hasSelector) {

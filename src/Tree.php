@@ -84,24 +84,31 @@ class Tree
                 // Get node classes
                 $classes = array_filter(explode(' ', $this->getDOMAttributeValue($child, 'class')));
 
-                $selector = $this->getSelector($child, $tag);
+                // Get LESS node selector
+                $selector = $this->getSelector($child, $tag, $classes);
 
-                // Find child node by selector
-                $node = $parent !== null ? $parent->getChild($selector) : null;
+                // Ignore divs as generic markup element
+                if ($selector !== 'div') {
+                    // Find child node by selector
+                    $node = $parent !== null ? $parent->getChild($selector) : null;
 
-                // Check if we have created this selector LessNode for this branch
-                if (null === $node) {
-                    // Create internal node instance
-                    $node = new Node($selector, $tag, $parent);
+                    // Check if we have created this selector LessNode for this branch
+                    if (null === $node) {
+                        // Create internal node instance
+                        $node = new Node($selector, $tag, $parent);
+                    }
+
+                    // Create inner class modifiers for parent node
+                    foreach ($classes as $class) {
+                        new Node('&.' . $class, $tag, $node);
+                    }
+
+                    // Go deeper in recursion
+                    $this->analyzeSourceNode($child, $node);
+                } else {
+                    // Go deeper in recursion
+                    $this->analyzeSourceNode($child, $parent);
                 }
-
-                // Create inner class modifiers for parent node
-                foreach ($classes as $class) {
-                    new Node('&.' . $class, $tag, $node);
-                }
-
-                // Go deeper in recursion
-                $this->analyzeSourceNode($child, $node);
             }
         }
 
@@ -109,27 +116,44 @@ class Tree
             /** @var Node[string] $tagNodes Group current level nodes by tags */
             $tagNodes = [];
             foreach ($parent->children as $child) {
-                $tagNodes[$child->tag][$child->selector] = $child;
+                // Ignore DIV as generic markup element
+                if ($child->tag !== 'div') {
+                    $tagNodes[$child->tag][$child->selector] = $child;
+                }
             }
 
             // Check if we have inner nodes with same tag
             foreach ($tagNodes as $tag => $nodes) {
                 if (count($nodes) > 1) {
+                    /**
+                     * If we already had LESS node for this tag then we have
+                     * already replaced it with group tag so we do not need
+                     * to re-remove it from parent as it is already a new one
+                     */
+                    $matchingTagNode = null;
+                    if (array_key_exists($tag, $nodes)) {
+                        $matchingTagNode = $nodes[$tag];
+                        unset($nodes[$tag]);
+                    }
+
                     $tagNode = new Node($tag, $tag, $parent);
+
                     foreach ($nodes as $selector => $child) {
-                        /**
-                         * If we already had LESS node for this tag then we have
-                         * already replaced it with group tag so we do not need
-                         * to re-remove it from parent as it is already a new one
-                         */
-                        if ($selector !== $tag) {
+                        // Attach child to new grouped tag node
+                        $child->parent = &$tagNode;
+                        $tagNode->children[$selector] = $child;
+                        // Append & for inner nodes
+                        $child->selector = '&' . ltrim($child->selector, '&');
+                        // Remove child from current parent
+                        unset($parent->children[$selector]);
+                    }
+
+                    // Add matching tag node children to new grouped tag
+                    if (null !== $matchingTagNode) {
+                        foreach ($matchingTagNode->children as $selector => $child) {
                             // Attach child to new grouped tag node
                             $child->parent = &$tagNode;
                             $tagNode->children[$selector] = $child;
-                            // Append & for inner nodes
-                            $child->selector = '&' . $child->selector;
-                            // Remove child from current parent
-                            unset($parent->children[$selector]);
                         }
                     }
                 }
@@ -173,7 +197,7 @@ class Tree
      *
      * @return string LESS selector
      */
-    protected function getSelector(\DOMNode $child, $tag, array $classes = array())
+    protected function getSelector(\DOMNode $child, $tag, array &$classes)
     {
         // Define less node selector
         if (($identifier = $this->getDOMAttributeValue($child, 'id')) !== null) {

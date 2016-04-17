@@ -25,10 +25,18 @@ class TreeTest extends \PHPUnit_Framework_TestCase
         // HTML code block
         $html = <<<'HTML'
     <div id="testDIVIdentifier" class="test-class">
-        <a><span>Test link</span></a>
-        <a id="testAIdentifier"><span>Test link 2</span></a>
-        <a><span>Test link 3</span></a>
-        <a id="testAIdentifier2"><span id="testSPANIdentifier">Test link 4</span></a>
+        <div>
+            <a><span>Test link</span></a>
+            <a id="testAIdentifier"><span>Test link 2</span></a>
+            <a><span>Test link 3</span></a>
+            <a id="testAIdentifier2"><span id="testSPANIdentifier">Test link 4</span></a>
+        </div>
+        <div class="testDIV">
+
+        </div>
+        <div id="testDIVIdentifier">
+
+        </div>
     </div>
 HTML;
 
@@ -46,6 +54,12 @@ HTML;
         #testSPANIdentifier{
         }
       }
+      span{
+      }
+    }
+    .testDIV{
+    }
+    #testDIVIdentifier{
     }
   }
 }

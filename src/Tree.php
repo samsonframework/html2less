@@ -166,7 +166,7 @@ class Tree
      *
      * @return string LESS code
      */
-    public function output(Node $node, &$output = '', $level = 0)
+    public function output(Node $node, $output = '', $level = 0)
     {
         // Output less node with spaces
         $output .= $this->spaces($level) . $node . ' {' . "\n";

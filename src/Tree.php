@@ -168,23 +168,28 @@ class Tree
      */
     public function output(Node $node, &$output = '', $level = 0)
     {
-        // Define if this is not empty node and this is not generic nodes
-        $hasSelector = $node->selector !== '' && !in_array($node->selector, array('html', 'body'), true);
-
         // Output less node with spaces
-        if ($hasSelector) {
-            $output .= implode('', array_fill(0, $level, '  ')) . $node . ' {' . "\n";
-        }
+        $output .= $this->spaces($level) . $node . ' {' . "\n";
 
         foreach ($node->children as $child) {
-            $this->output($child, $output, $hasSelector ? $level + 1 : $level);
+            $this->output($child, $output, $level + 1);
         }
 
         // Close less node with spaces
-        if ($hasSelector) {
-            $output .= implode('', array_fill(0, $level, '  ')) . '}' . "\n";
-        }
+        $output .= $this->spaces($level) . '}' . "\n";
 
         return $output;
+    }
+
+    /**
+     * Get spaces for LESS tree level.
+     *
+     * @param int $level LESS tree depth
+     *
+     * @return string Spaces for current LESS tree depth
+     */
+    protected function spaces($level = 0)
+    {
+        return implode('', array_fill(0, $level, '  '));
     }
 }

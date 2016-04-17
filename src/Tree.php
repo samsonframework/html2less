@@ -100,6 +100,7 @@ class Tree
 
                     // Create inner class modifiers for parent node
                     foreach ($classes as $class) {
+                        // Create inner node without correct tag to avoid grouping bugs
                         new Node('&.' . $class, '&.' . $class, $node);
                     }
 
@@ -126,6 +127,7 @@ class Tree
             foreach ($tagNodes as $tag => $nodes) {
                 if (count($nodes) > 1) {
                     /**
+                     * @var Node $matchingTagNode
                      * If we already had LESS node for this tag then we have
                      * already replaced it with group tag so we do not need
                      * to re-remove it from parent as it is already a new one

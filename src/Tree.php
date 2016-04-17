@@ -172,7 +172,7 @@ class Tree
         $output .= $this->spaces($level) . $node . ' {' . "\n";
 
         foreach ($node->children as $child) {
-            $this->output($child, $output, $level + 1);
+            $output = $this->output($child, $output, $level + 1);
         }
 
         // Close less node with spaces

@@ -76,6 +76,9 @@ class Tree
      */
     protected function &analyzeSourceNode(\DOMNode $domNode, Node $parent)
     {
+        /** @var Node[string] $tagNodes Group current level nodes by tags */
+        $tagNodes = [];
+
         foreach ($domNode->childNodes as $child) {
             $tag = $child->nodeName;
 
@@ -98,6 +101,11 @@ class Tree
                         $node = new Node($selector, $tag, $parent);
                     }
 
+                    // Group LESS nodes by tag name
+                    if ($tag !== 'div') {
+                        $tagNodes[$tag][$selector] = $node;
+                    }
+
                     // Create inner class modifiers for parent node
                     foreach ($classes as $class) {
                         // Create inner node without correct tag to avoid grouping bugs
@@ -114,52 +122,7 @@ class Tree
         }
 
         if (null !== $parent) {
-            /** @var Node[string] $tagNodes Group current level nodes by tags */
-            $tagNodes = [];
-            foreach ($parent->children as $child) {
-                // Ignore DIV as generic markup element
-                if ($child->tag !== 'div') {
-                    $tagNodes[$child->tag][$child->selector] = $child;
-                }
-            }
-
-            // Check if we have inner nodes with same tag
-            foreach ($tagNodes as $tag => $nodes) {
-                if (count($nodes) > 1) {
-                    /**
-                     * @var Node $matchingTagNode
-                     * If we already had LESS node for this tag then we have
-                     * already replaced it with group tag so we do not need
-                     * to re-remove it from parent as it is already a new one
-                     */
-                    $matchingTagNode = null;
-                    if (array_key_exists($tag, $nodes)) {
-                        $matchingTagNode = $nodes[$tag];
-                        unset($nodes[$tag]);
-                    }
-
-                    $tagNode = new Node($tag, $tag, $parent);
-
-                    foreach ($nodes as $selector => $child) {
-                        // Attach child to new grouped tag node
-                        $child->parent = &$tagNode;
-                        $tagNode->children[$selector] = $child;
-                        // Append & for inner nodes
-                        $child->selector = '&' . ltrim($child->selector, '&');
-                        // Remove child from current parent
-                        unset($parent->children[$selector]);
-                    }
-
-                    // Add matching tag node children to new grouped tag
-                    if (null !== $matchingTagNode) {
-                        foreach ($matchingTagNode->children as $selector => $child) {
-                            // Attach child to new grouped tag node
-                            $child->parent = &$tagNode;
-                            $tagNode->children[$selector] = $child;
-                        }
-                    }
-                }
-            }
+            $this->optimizeGroupTags($tagNodes, $parent);
         }
 
         return $parent;
@@ -210,6 +173,53 @@ class Tree
             return $tag . '[name=' . $name . ']';
         } else {
             return $tag;
+        }
+    }
+
+    /**
+     * Optimize by grouping tag name LESS nodes.
+     *
+     * @param      Node [string] $tagNodes
+     * @param Node $parent
+     */
+    protected function optimizeGroupTags($tagNodes, Node $parent)
+    {
+        // Check if we have inner nodes with same tag
+        foreach ($tagNodes as $tag => $nodes) {
+            if (count($nodes) > 1) {
+                /**
+                 * @var Node $matchingTagNode
+                 * If we already had LESS node for this tag then we have
+                 * already replaced it with group tag so we do not need
+                 * to re-remove it from parent as it is already a new one
+                 */
+                $matchingTagNode = null;
+                if (array_key_exists($tag, $nodes)) {
+                    $matchingTagNode = $nodes[$tag];
+                    unset($nodes[$tag]);
+                }
+
+                $tagNode = new Node($tag, $tag, $parent);
+
+                foreach ($nodes as $selector => $child) {
+                    // Attach child to new grouped tag node
+                    $child->parent = &$tagNode;
+                    $tagNode->children[$selector] = $child;
+                    // Append & for inner nodes
+                    $child->selector = '&' . ltrim($child->selector, '&');
+                    // Remove child from current parent
+                    unset($parent->children[$selector]);
+                }
+
+                // Add matching tag node children to new grouped tag
+                if (null !== $matchingTagNode) {
+                    foreach ($matchingTagNode->children as $selector => $child) {
+                        // Attach child to new grouped tag node
+                        $child->parent = &$tagNode;
+                        $tagNode->children[$selector] = $child;
+                    }
+                }
+            }
         }
     }
 

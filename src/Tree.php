@@ -134,6 +134,15 @@ class Tree
         return null;
     }
 
+    /**
+     * Get current \DOMNode LESS selector.
+     *
+     * @param \DOMNode $child
+     * @param string   $tag
+     * @param array    $classes
+     *
+     * @return string LESS selector
+     */
     protected function getSelector(\DOMNode $child, $tag, array $classes = array())
     {
         // Define less node selector

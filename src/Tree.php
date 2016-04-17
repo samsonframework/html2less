@@ -58,12 +58,12 @@ class Tree
     {
         libxml_use_internal_errors(true);
 
-        /** @var \DOMNode Pointer to current dom element */
+        /** @var \DOMDocument $dom Pointer to current dom element */
         $dom = new \DOMDocument();
-        $dom->loadHTML($source);
+        $dom->loadHTML($source, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
 
         // Perform recursive node analysis
-        return $this->analyzeSourceNode($dom, new Node(''));
+        return $this->analyzeSourceNode($dom);
     }
 
     /**
@@ -74,8 +74,9 @@ class Tree
      *
      * @return Node
      */
-    protected function &analyzeSourceNode(\DOMNode $domNode, Node $parent)
+    protected function &analyzeSourceNode(\DOMNode $domNode, Node $parent = null)
     {
+        $node = null;
         foreach ($domNode->childNodes as $child) {
             $tag = $child->nodeName;
 
@@ -84,18 +85,10 @@ class Tree
                 // Get node classes
                 $classes = array_filter(explode(' ', $this->getDOMAttributeValue($child, 'class')));
 
-                // Define less node selector
-                $selector = $tag;
-                if (($identifier = $this->getDOMAttributeValue($child, 'id')) !== null) {
-                    $selector = '#' . $identifier;
-                } elseif (count($classes)) {
-                    $selector = '.' . array_shift($classes);
-                } elseif (($name = $this->getDOMAttributeValue($child, 'name')) !== null) {
-                    $selector = $tag . '[name=' . $name . ']';
-                }
+                $selector = $this->getSelector($child, $tag);
 
                 // Find child node by selector
-                $node = $parent->getChild($selector);
+                $node = $parent !== null ? $parent->getChild($selector) : null;
 
                 // Check if we have created this selector LessNode for this branch
                 if (null === $node) {
@@ -113,7 +106,7 @@ class Tree
             }
         }
 
-        return $parent;
+        return $node;
     }
 
     /**
@@ -139,6 +132,20 @@ class Tree
         }
 
         return null;
+    }
+
+    protected function getSelector(\DOMNode $child, $tag, array $classes = array())
+    {
+        // Define less node selector
+        if (($identifier = $this->getDOMAttributeValue($child, 'id')) !== null) {
+            return '#' . $identifier;
+        } elseif (count($classes)) {
+            return '.' . array_shift($classes);
+        } elseif (($name = $this->getDOMAttributeValue($child, 'name')) !== null) {
+            return $tag . '[name=' . $name . ']';
+        } else {
+            return $tag;
+        }
     }
 
     /**

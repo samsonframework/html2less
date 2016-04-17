@@ -150,16 +150,19 @@ class Tree
      */
     public function output(Node $node, &$output = '', $level = 0)
     {
-        $hasSelector = isset($node->selector{0});
+        // Define if this is not empty node and this is not generic nodes
+        $hasSelector = isset($node->selector{0}) && !in_array($node->selector, array('html', 'body'));
+
+        // Output less node with spaces
         if ($hasSelector) {
-            // Generate tabs array
             $output .= implode('', array_fill(0, $level, '  ')) . $node . ' {' . "\n";
         }
 
         foreach ($node->children as $child) {
-            $this->output($child, $output, $level + 1);
+            $this->output($child, $output, $hasSelector ? $level + 1 : $level);
         }
 
+        // Close less node with spaces
         if ($hasSelector) {
             $output .= implode('', array_fill(0, $level, '  ')) . '}' . "\n";
         }

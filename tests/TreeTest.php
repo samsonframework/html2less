@@ -20,13 +20,29 @@ class TreeTest extends \PHPUnit_Framework_TestCase
         <a id="testAIdentifier2"><span id="testSPANIdentifier">Test link 4</span></a>
     </div>
 HTML;
+        $expected = <<<'LESS'
+#testDIVIdentifier {
+  &.test-class {
+  }
+  a {
+    span {
+    }
+  }
+  #testAIdentifier {
+    span {
+    }
+  }
+  #testAIdentifier2 {
+    #testSPANIdentifier {
+    }
+  }
+}
+
+LESS;
 
         $tree = new Tree();
         $lessTree = $tree->build($html);
-        $output = $tree->output($lessTree);
-
-        var_dump($output);
-
-        $this->assertTrue(strpos($output, '#testDIVIdentifier') !== false);
+        var_dump($tree->output($lessTree));
+        $this->assertEquals($expected, $tree->output($lessTree));
     }
 }

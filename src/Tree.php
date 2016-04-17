@@ -225,7 +225,7 @@ class Tree
     public function output(Node $node, $output = '', $level = 0)
     {
         // Output less node with spaces
-        $output .= $this->spaces($level) . $node . '{' . "\n";
+        $output .= $this->spaces($level) . (isset($node->selector{0}) ? $node . ' ' : '') . '{' . "\n";
 
         foreach ($node->children as $child) {
             $output = $this->output($child, $output, $level + 1);

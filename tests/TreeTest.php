@@ -42,24 +42,24 @@ HTML;
 
         $expected = <<<'LESS'
 {
-  #testDIVIdentifier{
-    &.test-class{
+  #testDIVIdentifier {
+    &.test-class {
     }
-    a{
-      &#testAIdentifier{
-        span{
+    a {
+      &#testAIdentifier {
+        span {
         }
       }
-      &#testAIdentifier2{
-        #testSPANIdentifier{
+      &#testAIdentifier2 {
+        #testSPANIdentifier {
         }
       }
-      span{
+      span {
       }
     }
-    .testDIV{
+    .testDIV {
     }
-    #testDIVIdentifier{
+    #testDIVIdentifier {
     }
   }
 }
@@ -92,26 +92,26 @@ LESS;
 HTML;
         $expected = <<<'LESS'
 {
-  .share-hidden{
-    .share{
-      .share-header{
+  .share-hidden {
+    .share {
+      .share-header {
       }
-      .all-share{
-        a{
-          &.goodshare{
-            &.one-share{
+      .all-share {
+        a {
+          &.goodshare {
+            &.one-share {
             }
-            &.fb{
+            &.fb {
             }
-            &.tw{
+            &.tw {
             }
-            &.gp{
+            &.gp {
             }
           }
-          &.badshare{
-            &.one-share{
+          &.badshare {
+            &.one-share {
             }
-            &.gp{
+            &.gp {
             }
           }
         }

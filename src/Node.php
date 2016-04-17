@@ -6,12 +6,12 @@
 namespace samsonframework\html2less;
 
 /**
- * Internal HTML DOM node tree.
+ * LESS tree node.
  *
  * @author    Vitaly Egorov <egorov@samsonos.com>
  * @copyright 2016 SamsonOS
  */
-class LessNode
+class Node
 {
     /** @var string Selector for node */
     public $selector;

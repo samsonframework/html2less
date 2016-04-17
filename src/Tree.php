@@ -63,7 +63,7 @@ class Tree
         $dom->loadHTML($source, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
 
         // Perform recursive node analysis
-        return $this->analyzeSourceNode($dom);
+        return $this->analyzeSourceNode($dom, new Node('', ''));
     }
 
     /**
@@ -74,9 +74,8 @@ class Tree
      *
      * @return Node
      */
-    protected function &analyzeSourceNode(\DOMNode $domNode, Node $parent = null)
+    protected function &analyzeSourceNode(\DOMNode $domNode, Node $parent)
     {
-        $node = null;
         foreach ($domNode->childNodes as $child) {
             $tag = $child->nodeName;
 
@@ -93,12 +92,12 @@ class Tree
                 // Check if we have created this selector LessNode for this branch
                 if (null === $node) {
                     // Create internal node instance
-                    $node = new Node($selector, $parent);
+                    $node = new Node($selector, $tag, $parent);
                 }
 
                 // Create inner class modifiers for parent node
                 foreach ($classes as $class) {
-                    new Node('&.' . $class, $node);
+                    new Node('&.' . $class, $tag, $node);
                 }
 
                 // Go deeper in recursion
@@ -106,7 +105,38 @@ class Tree
             }
         }
 
-        return $node;
+        if (null !== $parent) {
+            /** @var Node[string] $tagNodes Group current level nodes by tags */
+            $tagNodes = [];
+            foreach ($parent->children as $child) {
+                $tagNodes[$child->tag][$child->selector] = $child;
+            }
+
+            // Check if we have inner nodes with same tag
+            foreach ($tagNodes as $tag => $nodes) {
+                if (count($nodes) > 1) {
+                    $tagNode = new Node($tag, $tag, $parent);
+                    foreach ($nodes as $selector => $child) {
+                        /**
+                         * If we already had LESS node for this tag then we have
+                         * already replaced it with group tag so we do not need
+                         * to re-remove it from parent as it is already a new one
+                         */
+                        if ($selector !== $tag) {
+                            // Attach child to new grouped tag node
+                            $child->parent = &$tagNode;
+                            $tagNode->children[$selector] = $child;
+                            // Append & for inner nodes
+                            $child->selector = '&' . $child->selector;
+                            // Remove child from current parent
+                            unset($parent->children[$selector]);
+                        }
+                    }
+                }
+            }
+        }
+
+        return $parent;
     }
 
     /**
@@ -169,7 +199,7 @@ class Tree
     public function output(Node $node, $output = '', $level = 0)
     {
         // Output less node with spaces
-        $output .= $this->spaces($level) . $node . ' {' . "\n";
+        $output .= $this->spaces($level) . $node . '{' . "\n";
 
         foreach ($node->children as $child) {
             $output = $this->output($child, $output, $level + 1);

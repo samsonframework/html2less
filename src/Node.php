@@ -15,6 +15,8 @@ class Node
 {
     /** @var string Selector for node */
     public $selector;
+    /** @var string HTML tag name */
+    public $tag;
     /** @var $this Pointer to parent node */
     public $parent;
     /** @var $this [] Collection of nested nodes */
@@ -24,13 +26,15 @@ class Node
      * Create LESS Node
      *
      * @param string $selector Forced LESS node selector
+     * @param string $tag      HTML tag name
      * @param        $this     $parent   Pointer to parent node
      */
-    public function __construct($selector, self &$parent = null)
+    public function __construct($selector, $tag, self &$parent = null)
     {
         // Pointer to parent LESS Node
         $this->parent = &$parent;
         $this->selector = $selector;
+        $this->tag = $tag;
 
         // Add this node to parent
         if (null !== $parent) {

@@ -71,4 +71,60 @@ LESS;
         $output = $tree->output($lessTree);
         $this->assertEquals($expected, $output);
     }
+
+    public function testInnerGroupingBug()
+    {
+        $html = <<<'HTML'
+<div class="share-hidden">
+    <div class="share">
+        <div class="share-header">
+            <?php t('Share with your friends') ?>
+        </div>
+
+        <div class="all-share">
+            <a class="goodshare one-share fb" data-type="fb" href="#"></a>
+            <a class="goodshare one-share tw" data-type="tw" href="#"></a>
+            <a class="badshare one-share gp" data-type="gp" href="#"></a>
+            <a class="goodshare one-share gp" data-type="gp" href="#"></a>
+        </div>
+    </div>
+</div>
+HTML;
+        $expected = <<<'LESS'
+{
+  .share-hidden{
+    .share{
+      .share-header{
+      }
+      .all-share{
+        a{
+          &.goodshare{
+            &.one-share{
+            }
+            &.fb{
+            }
+            &.tw{
+            }
+            &.gp{
+            }
+          }
+          &.badshare{
+            &.one-share{
+            }
+            &.gp{
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+LESS;
+
+        $tree = new Tree();
+        $lessTree = $tree->build($html);
+        $output = $tree->output($lessTree);
+        $this->assertEquals($expected, $output);
+    }
 }

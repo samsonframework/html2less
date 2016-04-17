@@ -100,7 +100,7 @@ class Tree
 
                     // Create inner class modifiers for parent node
                     foreach ($classes as $class) {
-                        new Node('&.' . $class, $tag, $node);
+                        new Node('&.' . $class, '&.' . $class, $node);
                     }
 
                     // Go deeper in recursion

@@ -76,7 +76,7 @@ class Tree
      */
     protected function &analyzeSourceNode(\DOMNode $domNode, Node $parent)
     {
-        /** @var Node[string] $tagNodes Group current level nodes by tags */
+        /** @var Node[] $tagNodes Group current level nodes by tags */
         $tagNodes = [];
 
         foreach ($domNode->childNodes as $child) {
@@ -179,8 +179,8 @@ class Tree
     /**
      * Optimize by grouping tag name LESS nodes.
      *
-     * @param      Node [string] $tagNodes
-     * @param Node $parent
+     * @param Node[] $tagNodes
+     * @param Node   $parent
      */
     protected function optimizeGroupTags($tagNodes, Node $parent)
     {

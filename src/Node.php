@@ -19,7 +19,7 @@ class Node
     public $tag;
     /** @var $this Pointer to parent node */
     public $parent;
-    /** @var $this [] Collection of nested nodes */
+    /** @var self[] Collection of nested nodes */
     public $children = array();
 
     /**
@@ -27,7 +27,7 @@ class Node
      *
      * @param string $selector Forced LESS node selector
      * @param string $tag      HTML tag name
-     * @param        $this     $parent   Pointer to parent node
+     * @param self   $parent   Pointer to parent node
      */
     public function __construct($selector, $tag, self &$parent = null)
     {

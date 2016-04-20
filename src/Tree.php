@@ -1,9 +1,10 @@
 <?php
+
 namespace samsonframework\html2less;
 
 /**
  * Created by Vitaly Iegorov <egorov@samsonos.com>.
- * on 15.04.16 at 12:43
+ * on 15.04.16 at 12:43.
  */
 class Tree
 {
@@ -150,7 +151,7 @@ class Tree
             }
         }
 
-        return null;
+        return;
     }
 
     /**
@@ -188,10 +189,10 @@ class Tree
         foreach ($tagNodes as $tag => $nodes) {
             if (count($nodes) > 1) {
                 /**
-                 * @var Node $matchingTagNode
-                 * If we already had LESS node for this tag then we have
-                 * already replaced it with group tag so we do not need
-                 * to re-remove it from parent as it is already a new one
+                 * @var Node
+                 *           If we already had LESS node for this tag then we have
+                 *           already replaced it with group tag so we do not need
+                 *           to re-remove it from parent as it is already a new one
                  */
                 $matchingTagNode = null;
                 if (array_key_exists($tag, $nodes)) {

@@ -1,11 +1,12 @@
 <?php
+
 namespace samsonframework\html2less\tests;
 
 use samsonframework\html2less\Tree;
 
 /**
  * Created by <egorov@samsonos.com>
- * on 18.04.16 at 17:20
+ * on 18.04.16 at 17:20.
  */
 class TreeTest extends \PHPUnit_Framework_TestCase
 {

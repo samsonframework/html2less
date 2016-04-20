@@ -1,8 +1,9 @@
 <?php
 /**
  * Created by Vitaly Iegorov <egorov@samsonos.com>.
- * on 15.04.16 at 12:47
+ * on 15.04.16 at 12:47.
  */
+
 namespace samsonframework\html2less;
 
 /**
@@ -23,7 +24,7 @@ class Node
     public $children = array();
 
     /**
-     * Create LESS Node
+     * Create LESS Node.
      *
      * @param string $selector Forced LESS node selector
      * @param string $tag      HTML tag name
@@ -56,7 +57,7 @@ class Node
             return $this->children[$selector];
         }
 
-        return null;
+        return;
     }
 
     /**
